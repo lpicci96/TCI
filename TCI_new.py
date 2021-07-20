@@ -12,23 +12,24 @@ start_time = time.time()
 exp_df = data.groupby(['i', 'k'], as_index=False).agg('sum').drop('j', axis = 1).rename(columns={'v':'v_exp'})
 imp_df = data.groupby(['j', 'k'], as_index=False).agg('sum').drop('i', axis = 1).rename(columns={'v':'v_imp'})
 
-#make sure all codes are accounted for
-codes = list(set(imp_df.k.unique())|set(exp_df.k.unique()))
-for code in codes:
-    for exporter in list(exp_df.i.unique()):
-        if code not in list(exp_df.loc[exp_df.i == exporter, 'k']):
-            exp_df = exp_df.append({'i':exporter, 'k':code, 'v_exp':0}, ignore_index=True)
-        else:
-            pass
-    for importer in list(imp_df.j.unique()):
-        if code not in list(imp_df.loc[imp_df.j == importer, 'k']):
-            imp_df = imp_df.append({'j':importer, 'k':code, 'v_imp':0}, ignore_index=True)
-        else:
-            pass
+#get all the unique combination of i & k
+dt = data[['i','k']]
+uniques = [dt[i].unique().tolist() for i in dt.columns ]
+exp = pd.DataFrame(product(*uniques), columns = dt.columns)
+exp_df = exp.merge(exp_df, on = ['i','k'], how = 'outer')
 
+#get all the unique combination of j & k
+dt = data[['j','k']]
+uniques = [dt[i].unique().tolist() for i in dt.columns ]
+imp = pd.DataFrame(product(*uniques), columns = dt.columns)
+imp_df = imp.merge(imp_df, on = ['j','k'], how = 'outer')
 
-#create new df
-df_ij = pd.merge(exp_df, imp_df, on = ['k'], how='outer')
+#Merge exp_df and imp_df
+df_ij = exp_df.merge(imp_df, on=['k'], how = 'outer')
+#fill nan
+df_ij.fillna(0,inplace = True)
+#remove i==j
+df_ij = df_ij[df_ij['i'] != df_ij['j']]
 
 #calc total exports and imports
 imp_tot = imp_df.groupby('j').agg('sum').drop('k', axis = 1).rename(columns={'v_imp':'imp_tot'})
