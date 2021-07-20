@@ -1,7 +1,10 @@
-## Luca Picci 7.18.2021
+## Jasmine (Kexin) Shang and Luca Picci 
+## 2021.07.19
 import pandas as pd
 import numpy as np
 import time
+from itertools import product
+
 path = r"C:\Users\lpicc\OneDrive\Documents\Pardee work\data team\TCI\BACI_HS92_Y1995_V202102.csv"
 data = pd.read_csv(path)
 data= data.drop('q', axis = 1)
